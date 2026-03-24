@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 專案選題評估表｜宇鯨智能</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .canvas-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .canvas-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .canvas-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .canvas-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .client-info {
+            background: #ecf0f1;
+            padding: 20px 30px;
+            border-bottom: 3px solid #bdc3c7;
+        }
+
+        .client-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .client-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .client-field label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .client-field input {
+            padding: 8px 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+
+        .client-field input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            min-height: 800px;
+        }
+
+        .canvas-section {
+            border: 2px solid #ecf0f1;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-section:hover {
+            border-color: #3498db;
+            box-shadow: inset 0 0 20px rgba(52, 152, 219, 0.1);
+        }
+
+        .canvas-section h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            position: relative;
+        }
+
+        .canvas-section h3::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: #e74c3c;
+        }
+
+        .section-content {
+            height: calc(100% - 60px);
+        }
+
+        .field-group {
+            margin-bottom: 15px;
+        }
+
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .field-group input,
+        .field-group textarea,
+        .field-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .field-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .field-group input:focus,
+        .field-group textarea:focus,
+        .field-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+        }
+
+        /* 特殊區域顏色標識 */
+        .current-state { background: linear-gradient(135deg, #ffebee, #fff); }
+        .challenges { background: linear-gradient(135deg, #fff3e0, #fff); }
+        .data-landscape { background: linear-gradient(135deg, #f3e5f5, #fff); }
+
+        .project-core { 
+            background: linear-gradient(135deg, #e8f5e8, #fff); 
+            border: 3px solid #4caf50;
+        }
+        .value-goals { background: linear-gradient(135deg, #e3f2fd, #fff); }
+        .strategy-alignment { background: linear-gradient(135deg, #fce4ec, #fff); }
+
+        .constraints { background: linear-gradient(135deg, #ffebee, #fff); }
+        .acceptance { background: linear-gradient(135deg, #fff8e1, #fff); }
+        .costs { background: linear-gradient(135deg, #f1f8e9, #fff); }
+
+        .rating-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .rating-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #ecf0f1;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .rating-value {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .section-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 1024px) {
+            .canvas-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(9, auto);
+            }
+            
+            .client-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .action-buttons {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            text-align: center;
+            border-top: 2px solid #ecf0f1;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <!-- 標題區域 -->
+        <div class="canvas-header">
+            <h1>AI 專案選題評估表｜宇鯨智能</h1>
+            <p>以單一工作任務為單位進行評估</p>
+        </div>
+
+        <!-- 客戶基本資訊 -->
+        <div class="client-info">
+            <div class="client-grid">
+                <div class="client-field">
+                    <label>產業類別</label>
+                    <input type="text" placeholder="例：製造業、金融業">
+                </div>
+                <div class="client-field">
+                    <label>部門名稱</label>
+                    <input type="text" placeholder="請輸入部門名稱">
+                </div>
+                <div class="client-field">
+                    <label>現況任務執行者職稱</label>
+                    <input type="text" placeholder="例：採購、客服">
+                </div>
+                <div class="client-field">
+                    <label>評估人</label>
+                    <input type="text" placeholder="評估人姓名">
+                </div>
+                <div class="client-field">
+                    <label>評估日期</label>
+                    <input type="date">
+                </div>
+                <div class="client-field">
+                    <label>聯絡方式</label>
+                    <input type="text" placeholder="電話/Email">
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要畫布區域 -->
+        <div class="canvas-grid">
+            <!-- 第一行：現況分析 -->
+            <div class="canvas-section current-state">
+                <div class="section-icon">📊</div>
+                <h3>現況挑戰</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>主要挑戰</label>
+                        <textarea placeholder="描述當前面臨的關鍵挑戰與痛點"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>過往嘗試</label>
+                        <textarea placeholder="之前的解決方案嘗試"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>失敗原因</label>
+                        <textarea placeholder="分析失敗的根本原因"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section project-core">
+                <div class="section-icon">🎯</div>
+                <h3>專案核心</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>專案名稱</label>
+                        <input type="text" placeholder="AI專案的名稱">
+                    </div>
+                    <div class="field-group">
+                        <label>需求描述</label>
+                        <textarea placeholder="詳細描述專案需求與期望達成的目標"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>短期目標</label>
+                        <textarea placeholder="3-6個月內要達成的目標"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section value-goals">
+                <div class="section-icon">💎</div>
+                <h3>價值與目標</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>期望價值</label>
+                        <textarea placeholder="預期產生的商業價值"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>影響程度</label>
+                        <input type="number" placeholder="預計影響的使用者人數/頻次/人時">
+                    </div>
+                    <div class="field-group">
+                        <label>機會成本</label>
+                        <textarea placeholder="不做此專案的潛在損失"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二行：數據與輸出 -->
+            <div class="canvas-section data-landscape">
+                <div class="section-icon">💾</div>
+                <h3>輸入數據現況</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>資料來源數量</label>
+                        <input type="number" placeholder="資料來源的數量">
+                    </div>
+                    <div class="field-group">
+                        <label>資料來源描述</label>
+                        <textarea placeholder="描述主要的資料來源"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>輸入方式</label>
+                        <select>
+                            <option>請選擇輸入方式</option>
+                            <option>系統查詢</option>
+                            <option>手動輸入</option>
+                            <option>批次上傳</option>
+                            <option>人工撰寫</option>
+                            <option>其他（補充於備註）</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>檔案格式</label>
+                        <select>
+                            <option>請選擇檔案格式</option>
+                            <option>紙本</option>
+                            <option>WORD</option>
+                            <option>EXCEL</option>
+                            <option>PDF</option>
+                            <option>圖片</option>
+                            <option>專用系統（CRM、ERP、MES、WMS...）</option>
+                            <option>其他（補充於備註）</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section strategy-alignment">
+                <div class="section-icon">🎯</div>
+                <h3>輸出與應用</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>輸出目標</label>
+                        <textarea placeholder="執行完畢後，提供給誰？進行什麼工作任務。例如：製作完請購單後，提供給主管審核。"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label>輸出方式</label>
+                        <select>
+                            <option>請選擇輸出方式</option>
+                            <option>專用系統自動產生</option>
+                            <option>下載檔案</option>
+                            <option>報表呈現</option>
+                            <option>email</option>
+                            <option>紙本</option>
+                            <option>通訊軟體（Line, Slack....）</option>
+                            <option>其他（補充於備註）</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>輸出格式</label>
+                        <select>
+                            <option>請選擇輸出格式</option>
+                            <option>指定系統內呈現</option>
+                            <option>WORD</option>
+                            <option>EXCEL</option>
+                            <option>PDF</option>
+                            <option>紙本檔案</option>
+                            <option>其他（補充於備註）</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section strategy-alignment">
+                <div class="section-icon">📈</div>
+                <h3>策略對齊</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>策略對齊度</label>
+                        <div class="rating-container">
+                            <input type="range" class="rating-slider" min="1" max="10" value="5" 
+                                   onInput="this.nextElementSibling.textContent = this.value">
+                            <span class="rating-value">5</span>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>管理層支持度</label>
+                        <div class="rating-container">
+                            <input type="range" class="rating-slider" min="1" max="10" value="5"
+                                   onInput="this.nextElementSibling.textContent = this.value">
+                            <span class="rating-value">5</span>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>數據準備度</label>
+                        <div class="rating-container">
+                            <input type="range" class="rating-slider" min="1" max="10" value="5"
+                                   onInput="this.nextElementSibling.textContent = this.value">
+                            <span class="rating-value">5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第三行：技術限制 -->
+            <div class="canvas-section constraints">
+                <div class="section-icon">⚠️</div>
+                <h3>技術約束</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>地端部署需求</label>
+                        <select>
+                            <option>否</option>
+                            <option>是</option>
+                            <option>部分需要</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>其他技術限制</label>
+                        <textarea placeholder="描述其他技術限制或規範要求"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section acceptance">
+                <div class="section-icon">👥</div>
+                <h3>接受度評估</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>執行者現況負面情緒</label>
+                        <div class="rating-container">
+                            <input type="range" class="rating-slider" min="1" max="10" value="5"
+                                   onInput="this.nextElementSibling.textContent = this.value">
+                            <span class="rating-value">5</span>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>執行者接受AI化程度</label>
+                        <div class="rating-container">
+                            <input type="range" class="rating-slider" min="1" max="10" value="5"
+                                   onInput="this.nextElementSibling.textContent = this.value">
+                            <span class="rating-value">5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-section costs">
+                <div class="section-icon">💰</div>
+                <h3>備註與觀察</h3>
+                <div class="section-content">
+                    <div class="field-group">
+                        <label>需求備註</label>
+                        <textarea placeholder="其他重要觀察、風險評估或特殊考量"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="clearCanvas()">清除重填</button>
+            <button class="btn btn-primary" onclick="exportPDF()">匯出PDF</button>
+        </div>
+    </div>
+
+    <script>
+        function clearCanvas() {
+            if (confirm('確定要清除所有內容嗎？')) {
+                document.querySelectorAll('input, textarea, select').forEach(field => {
+                    if (field.type === 'range') {
+                        field.value = 5;
+                        field.nextElementSibling.textContent = '5';
+                    } else {
+                        field.value = '';
+                    }
+                });
+            }
+        }
+
+        function exportPDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
